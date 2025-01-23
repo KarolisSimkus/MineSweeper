@@ -266,7 +266,7 @@ public:
     void run() { 
         // Vector of Vectors to represent the Cell Grid
         std::vector<std::vector<Cell*>> Cells;
-        //Resize the vectors to constants defined in header file
+        //Resize the vectors to defined constants 
         Cells.resize(noRows, std::vector<Cell*>(noCols, 0));
         
         Board gameBoard;
@@ -298,7 +298,6 @@ public:
                 //std::cout << "Cell at" << x << "," << y << "flagged \n";
             }
             else {
-                // If fuck around then: quit the game
                 //Is not working properly:)
                 //Problem for future me
                 endGameFlag = true;
