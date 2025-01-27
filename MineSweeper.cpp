@@ -1,7 +1,8 @@
 #include <iostream>
 #include <vector>
+#include <random>
 
-// Globals CAUSE VISUAL STUDIO CANT OPEN A FUCKING HEADER FILE FUCK YOU
+// Globals 
 constexpr int noCols = 9;
 constexpr int noRows = 9;
 
@@ -18,36 +19,28 @@ public:
     virtual void reveal() = 0;
     virtual bool isMine() = 0;
     virtual bool isFlagged() = 0;
+    virtual bool isZero() = 0;
     virtual void change(int num) = 0;
 };
+
 class MineCell : public Cell{
     char mine = 'x';
 public:
     char getchar() { 
-        if (flagged) {
-            return 'f';
-        }
+        if (flagged) { return 'f';}
         return revealed ? mine : '*'; 
     }
     void flag() {
-        if (flagged == true) {
-            flagged = false;
-        }
-        else {
-            flagged = true;
-        }
+        if (flagged) { flagged = false;}
+        else { flagged = true; }
     }
-    bool isMine() {
-        return true;
-    }
-    bool isFlagged() {
-        return flagged;
-    }
-    void reveal() {
-        revealed = true;
-    }
-    void change(int num) {
-    }
+
+    bool isMine() { return true;}
+    bool isFlagged() {return flagged;}
+    bool isZero() {return false;}
+    void reveal() { revealed = true;}
+
+    void change(int num) { ; } // empty
 };
 class NumberCell : public Cell {
 private:
@@ -56,29 +49,26 @@ public:
     NumberCell(int num){
         number = num;
     }
+
     char getchar() { 
-        if (flagged) {
-            return 'f';
-        }
+        if (flagged) { return 'f';}
         return revealed ? number : '*';
     }
     void flag() {
-        if (flagged == true) {
-            flagged = false;
-        }
-        else {
-            flagged = true;
-        }
+        if (flagged) { flagged = false;}
+        else {flagged = true;}
     }
-    void reveal() {
-        revealed = true;
-    }
-    bool isMine() {
+
+    void reveal() {revealed = true;}
+    bool isMine() {return false;}
+    bool isFlagged() {return flagged;}
+    bool isZero() {
+        if (number == '0') {
+            return true;
+        }
         return false;
     }
-    bool isFlagged() {
-        return flagged;
-    }
+
     void change(int num) {
         number = '0' + num;
     }
@@ -99,9 +89,14 @@ public:
 class Board{
 public:
 
-    // 
+    // VT-100 escape sequence
+    void clear_screen(){
+        printf(
+            "\033[2J"       // clear the screen
+            "\033[1;1H");  // move cursor home
+    }
+    // Draw to Terminal Screen Function
     void draw(std::vector<std::vector<Cell*>> &v) { 
-
         //Adds Legend bar to the top
         std::cout << "[ ]";
         for (int it = 0; it < noRows; it++) {
@@ -120,13 +115,15 @@ public:
         }
     }
 
-    // Using the Factory Design Pattern
     // Fill the board with Mines and Empty Number Cells
     void fillBoard(std::vector<std::vector<Cell*>> &v) {
+        std::random_device rd;
+        std::uniform_int_distribution<int> dist(0, 9);
+
         CellFactory factory;
         for (int i = 0; i < noCols; i++) {
             for (int j = 0; j < noRows; j++) {
-                if (j == 2) {
+                if (dist(rd) % 3 == 0) {
                     v[i][j] = factory.create(MINE);
                 }
                 else {
@@ -193,22 +190,17 @@ public:
                         }
                     }
                 }
-                 v[i][j]->change(count);
+                v[i][j]->change(count);
             }
         }
     }
     //Function to Check if all Mines are flagged
-    //Was lazy and did it the count them all up way
-    // Inneficient please re-do when not on pills
     bool allMinesFlagged(std::vector<std::vector<Cell*>> v) {
         int count = 0;
         for (int i = 0; i < noCols; i++) {
             for (int j = 0; j < noRows; j++) {
                 if (v[i][j]->isMine() == true && v[i][j]->isFlagged() != true) {
                     count++;
-                }
-                if (v[i][j]->isMine() == true && v[i][j]->isFlagged() == true) {
-                    std::cout << "Bomb at [" << i << "][" << j << "] is flagged\n";
                 }
             }
         }
@@ -226,41 +218,39 @@ public:
         for (int i = 0; i < noCols; i++) {
             for (int j = 0; j < noRows; j++) {
                 if (v[i][j]->getchar() == 'x') {
-                    //std::cout << "Mine exploded at: " << i << "," << j << "\n";
                     return true;
                 }
             }
         }
         return false;
     }
-    //Function Reveals a Cell
+    // Function to clear all empty cells
+    void revealAllZeroes(std::vector<std::vector<Cell*>> v) {
+        for (int i = 0; i < noCols; i++) {
+            for (int j = 0; j < noRows; j++) {
+                if (v[i][j]->isZero()) {
+                    v[i][j]->reveal();
+                }
+            }
+        }
+    }
+    // Function Reveals a Cell
     void revealSingleCell(std::vector<std::vector<Cell*>> &v, int x, int y) {
         v[x][y]->reveal();
     }
-    //Function Flags a Cell
+    // Function Flags a Cell
     void flagSingleCell(std::vector<std::vector<Cell*>> &v, int x, int y) {
         v[x][y]->flag();
     }
 };
-class InputHandler{
-};
+
 class Game {
 private:
     bool endGameFlag = false;
     bool isWinner = false;
     bool isMineExploded = false;
-protected:
+    bool quitjob = false;
 public:
-    
-    // Ending text depends on winning variable
-    void ending(bool isWin) {
-        if (isWin) {
-            std::cout << "Congratulations! You Won!";
-        }
-        else {
-            std::cout << "You blew up! Better luck next life!";
-        }
-    }
     
     // Main function for Game
     void run() { 
@@ -273,6 +263,7 @@ public:
 
         gameBoard.fillBoard(Cells); //Adds Mines to Cells
         gameBoard.updateBoardNumbers(Cells); // Adds Numbers to Cells
+        gameBoard.revealAllZeroes(Cells); // Reveals all empty Cells
 
         while (!endGameFlag) {
 
@@ -281,37 +272,28 @@ public:
 
             // Input
             int x, y;
-            char a;
+            char answer;
             std::cout << "Enter x, y, r(reveal)/f(flag); q to quit\n";
-            std::cin >> x >> y >> a;
+            std::cin >> x >> y >> answer;
             // The only guarantee vector doesn't go out of range here
-            // is that the player knows to type between 0 - 8
+            // is that the player knows to type between 0 - Row/Col max
             // else error
 
-
-            if (a == 'r') {
+            if (answer == 'r') {
                 Cells[x][y]->reveal();
-                //std::cout << "Cell at"<< x << "," << y << "revealed \n";
             }
-            else if (a == 'f') {
+            else if (answer == 'f') {
                 Cells[x][y]->flag();
-                //std::cout << "Cell at" << x << "," << y << "flagged \n";
             }
             else {
-                //Is not working properly:)
-                //Problem for future me
                 endGameFlag = true;
+                break;
             }
-            if (a == 'q') {
-                endGameFlag = true;
-                //Shows you blew up, change it so you deserted your job?
-            }
-
+                
             //Checks if a mine is revealed
             isMineExploded = gameBoard.isMineRevealed(Cells);
             //Checks if all mines are flagged
             isWinner = gameBoard.allMinesFlagged(Cells);
-
 
             if (isWinner) {
                 endGameFlag = true;
@@ -321,16 +303,9 @@ public:
                 isWinner = false;
             }
 
-
-            system("CLS"); 
-            // change to be multiplatform
-            // cause system CLS only works on windows apparently
+            gameBoard.clear_screen();
         }
-
-        // Ending Text function
-        ending(isWinner);
     }
-
 };
 
 int main(){
