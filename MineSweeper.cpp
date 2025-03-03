@@ -91,14 +91,16 @@ public:
 
     // VT-100 escape sequence
     void clear_screen(){
-        printf(
-            "\033[2J"       // clear the screen
-            "\033[1;1H");  // move cursor home
-        std::cout << std::endl;
-    }
+       // printf(
+       //     "\033[2J"       // clear the screen
+       //     "\033[1;1H");  // move cursor home
+       // for(int i = 0; i < 20; i++)
+            std::cout << std::endl;
+     }
     // Draw to Terminal Screen Function
     void draw(std::vector<std::vector<Cell*>> &v) { 
         // Adds Legend bar to the top
+        std::cout << "<---x--->" << std::endl;
         std::cout << "[ ]";
         for (int it = 0; it < noRows; it++) {
             std::cout << "["<<it<<"]";
