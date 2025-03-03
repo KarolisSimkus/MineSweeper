@@ -94,10 +94,11 @@ public:
         printf(
             "\033[2J"       // clear the screen
             "\033[1;1H");  // move cursor home
+        std::cout << std::endl;
     }
     // Draw to Terminal Screen Function
     void draw(std::vector<std::vector<Cell*>> &v) { 
-        //Adds Legend bar to the top
+        // Adds Legend bar to the top
         std::cout << "[ ]";
         for (int it = 0; it < noRows; it++) {
             std::cout << "["<<it<<"]";
@@ -105,7 +106,7 @@ public:
         std::cout << "\n";
 
         for (int i = 0; i < noCols; i++) {
-            std::cout << "[" << i << "]"; //Adds legend to the left
+            std::cout << "[" << i << "]"; // Adds legend to the left
             for (int j = 0; j < noRows; j++) {
                 std::cout << "[";
                 std::cout << v[i][j]->getchar();
@@ -133,8 +134,8 @@ public:
         }
     }
 
-    //A terrible function to change numbers of a grid by its hood mines
-    //I cant spel neihtghbor so I called it 'the hood'
+    // A terrible function to change numbers of a grid by its hood mines
+    // I cant spel neihtghbor so I called it 'the hood'
     void updateBoardNumbers(std::vector<std::vector<Cell*>>& v) {
         int count = 0;
         for (int i = 0; i < noCols; i++) {
@@ -194,7 +195,7 @@ public:
             }
         }
     }
-    //Function to Check if all Mines are flagged
+    // Function to Check if all Mines are flagged
     bool allMinesFlagged(std::vector<std::vector<Cell*>> v) {
         int count = 0;
         for (int i = 0; i < noCols; i++) {
@@ -255,26 +256,29 @@ public:
     // Main function for Game
     void run() { 
         // Vector of Vectors to represent the Cell Grid
+        // Maybe an std::array would be better here?
         std::vector<std::vector<Cell*>> Cells;
-        //Resize the vectors to defined constants 
+        // Resize the vectors to defined constants
+        // The Game params should be able to change depending on difficulty selected
+        // To add
         Cells.resize(noRows, std::vector<Cell*>(noCols, 0));
         
         Board gameBoard;
 
-        gameBoard.fillBoard(Cells); //Adds Mines to Cells
+        gameBoard.fillBoard(Cells); // Adds Mines to Cells
         gameBoard.updateBoardNumbers(Cells); // Adds Numbers to Cells
         gameBoard.revealAllZeroes(Cells); // Reveals all empty Cells
 
         while (!endGameFlag) {
 
-            //Draw the Grid
+            // Draw the Grid
             gameBoard.draw(Cells);
 
             // Input
             int x, y;
             char answer;
             std::cout << "Enter x, y, r(reveal)/f(flag); q to quit\n";
-            std::cin >> x >> y >> answer;
+            std::cin >> y >> x >> answer;
             // The only guarantee vector doesn't go out of range here
             // is that the player knows to type between 0 - Row/Col max
             // else error
@@ -290,9 +294,9 @@ public:
                 break;
             }
                 
-            //Checks if a mine is revealed
+            // Checks if a mine is revealed
             isMineExploded = gameBoard.isMineRevealed(Cells);
-            //Checks if all mines are flagged
+            // Checks if all mines are flagged
             isWinner = gameBoard.allMinesFlagged(Cells);
 
             if (isWinner) {
